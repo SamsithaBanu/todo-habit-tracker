@@ -1,5 +1,4 @@
 import { api } from "@/lib/api";
-import type { userData } from "@/lib/types";
 
 export interface UserMe {
     id: string;

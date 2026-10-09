@@ -31,15 +31,15 @@ export const PetCard: React.FC<PetCardProps> = ({ pet }) => {
         );
     }
 
-    const getPetEmoji = (species: string) => {
-        const s = species.toLowerCase();
-        if (s.includes("dog")) return "🐶";
-        if (s.includes("cat")) return "🐱";
-        if (s.includes("plant") || s.includes("rose")) return "🪴";
-        if (s.includes("dragon")) return "🐉";
-        if (s.includes("rabbit") || s.includes("bunny")) return "🐰";
-        return "🐾";
-    };
+    // const getPetEmoji = (species: string) => {
+    //     const s = species.toLowerCase();
+    //     if (s.includes("dog")) return "🐶";
+    //     if (s.includes("cat")) return "🐱";
+    //     if (s.includes("plant") || s.includes("rose")) return "🪴";
+    //     if (s.includes("dragon")) return "🐉";
+    //     if (s.includes("rabbit") || s.includes("bunny")) return "🐰";
+    //     return "🐾";
+    // };
 
     const isDead = pet.status === "dead" || pet.health <= 0;
     const healthColor = pet.health > 60 ? "bg-emerald-500" : pet.health > 30 ? "bg-amber-500" : "bg-rose-500";

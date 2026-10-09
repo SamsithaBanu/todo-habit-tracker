@@ -13,7 +13,6 @@ import {
 } from "@/services/TodoService";
 import type { Todo } from "@/lib/types";
 import { Link } from "react-router-dom";
-import { Settings2 } from "lucide-react";
 
 const formatDateLabel = (d: Date): string => {
     const today = new Date();

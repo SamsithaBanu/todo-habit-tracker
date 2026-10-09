@@ -6,7 +6,6 @@ import { getMe, updateSettings, type UserMe } from "@/services/UserService";
 import {
     enablePushNotifications,
     disablePushNotifications,
-    getNotificationPermission,
     hasActiveSubscription,
 } from "@/services/PushService";
 
