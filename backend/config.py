@@ -15,6 +15,8 @@ class DatabaseSettings(BaseSettings):
 
     REDIS_PORT: str
     REDIS_HOST: str
+    REDIS_PASSWORD: str = ""   
+
 
     VAPID_PUBLIC_KEY: str
     VAPID_PRIVATE_KEY: str

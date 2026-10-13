@@ -4,6 +4,8 @@ from redis.asyncio import Redis
 _token_blacklist = Redis(
     host=db_settings.REDIS_HOST,
     port = db_settings.REDIS_PORT,
+    password=db_settings.REDIS_PASSWORD or None,
+    decode_responses=True,
     db=0
 )
 
