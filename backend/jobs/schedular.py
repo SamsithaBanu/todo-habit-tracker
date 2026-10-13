@@ -9,7 +9,10 @@ scheduler = AsyncIOScheduler()
 
 async def _run_habit_generator_wrapper():
     async with async_session_maker() as session:
-        await run_habit_generator(session)
+        try:
+            await run_habit_generator(session)
+        except Exception:
+            print("habit_generator_job failed")
 
 async def _run_nighlty_feed_wrapper():
     async with async_session_maker() as session:
@@ -19,11 +22,12 @@ async def _run_reminder_wrapper():
     async with async_session_maker() as session:
         await run_reminder_scheduler(session)
 
+
 def start_scheduler():
     scheduler.add_job(
         _run_habit_generator_wrapper,
         trigger='cron',
-        minute='*',
+        minute="*/5",
         id="habit_generator",
         replace_existing=True
     ),
