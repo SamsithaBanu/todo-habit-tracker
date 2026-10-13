@@ -23,11 +23,7 @@ app = FastAPI(lifespan=lifespan_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://todo-habit-tracker-gho1sj0ry-samsithabanus-projects.vercel.app",
-        "https://todo-habit-tracker-seven.vercel.app",  # your other URL from the previous message
-        "http://localhost:5173",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
