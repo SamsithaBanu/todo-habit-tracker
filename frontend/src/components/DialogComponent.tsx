@@ -8,13 +8,21 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 
+interface DialogDemoProps {
+    handleOkToggle: () => Promise<void> | void;
+    handleCloseToggle: () => void;
+    isToggleClicked: boolean;
+    toggleId: string | null;
+    loadingId: string | null;
+}
+
 export function DialogDemo({
     handleOkToggle,
     handleCloseToggle,
     isToggleClicked,
     toggleId,
     loadingId,
-}) {
+}: DialogDemoProps) {
     return (
         <Dialog
             open={isToggleClicked}
