@@ -1,11 +1,11 @@
 from config import db_settings
-from pydantic_settings.sources.providers import json
 from uuid import UUID
 from sqlalchemy import select
 from database.models import PUSH_SUBSCRIPTIONS
 from app.schemas.push import PushSubscribeRequest
 from sqlalchemy.ext.asyncio import AsyncSession
 from pywebpush import webpush, WebPushException
+import json
 
 class PushService:
     def __init__(self, session: AsyncSession):
@@ -31,16 +31,16 @@ class PushService:
         for sub in subs:
             try:
                 webpush(
-                    subscription_info = {
-                        "endpoint":sub.endpoint,
-                        "keys":{
+                    subscription_info={
+                        "endpoint": sub.endpoint,
+                        "keys": {
                             "p256dh": sub.p256dh,
-                            "auth":sub.auth
+                            "auth": sub.auth
                         }
                     },
-                    data = json.dumps({"title":title, "body":body}),
-                    vapid_private_key = db_settings.VAPID_PRIVATE_KEY,
-                    vapid_claims=db_settings.VAPID_CLAIM_EMAIL
+                    data=json.dumps({"title": title, "body": body}),
+                    vapid_private_key=db_settings.VAPID_PRIVATE_KEY,
+                    vapid_claims={"sub": db_settings.VAPID_CLAIM_EMAIL},   # ← wrap in a dict with "sub" key
                 )
             
             except WebPushException as e:

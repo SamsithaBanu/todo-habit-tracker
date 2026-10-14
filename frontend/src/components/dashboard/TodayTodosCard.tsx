@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { CheckCircle2, Circle, Plus, Calendar, CheckSquare, Trash2, Repeat } from "lucide-react";
 import type { Todo } from "@/lib/types";
+import { DialogDemo } from "../DialogComponent";
 
 interface TodayTodosCardProps {
     todos: Todo[];
@@ -18,6 +19,8 @@ export const TodayTodosCard: React.FC<TodayTodosCardProps> = ({
     const [newTitle, setNewTitle] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [loadingId, setLoadingId] = useState<string | null>(null);
+    const [isToggleClicked, setIsToggleClicked] = useState(false);
+    const [toggleId, setToggleId] = useState<string | null>(null);
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,16 +37,32 @@ export const TodayTodosCard: React.FC<TodayTodosCardProps> = ({
         }
     };
 
-    const handleToggle = async (todoId: string) => {
+    const handleToggle = (todoId: string) => {
+        setToggleId(todoId);
+        setIsToggleClicked(true);
+    }
+
+    const handleOkToggle = async () => {
+        if (!toggleId) return;
+
         try {
-            setLoadingId(todoId);
-            await onToggleComplete(todoId);
+            setLoadingId(toggleId);
+            await onToggleComplete(toggleId);
         } catch (error) {
             console.error("Failed to toggle todo:", error);
         } finally {
             setLoadingId(null);
+            setToggleId(null);
+            setIsToggleClicked(false);
         }
     };
+
+
+    const handleCloseToggle = async () => {
+        setLoadingId(null);
+        setToggleId(null)
+        setIsToggleClicked(false)
+    }
 
     const handleDelete = async (todoId: string) => {
         if (!onDeleteTodo) return;
@@ -113,17 +132,16 @@ export const TodayTodosCard: React.FC<TodayTodosCardProps> = ({
                         return (
                             <div
                                 key={todo.id}
-                                className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-200 ${
-                                    isDone
-                                        ? "bg-gray-50/70 dark:bg-slate-800/40 border-gray-100 dark:border-slate-800 text-gray-400 dark:text-slate-500"
-                                        : "bg-white dark:bg-slate-800/80 border-gray-100 dark:border-slate-700 text-gray-800 dark:text-slate-200 hover:border-purple-200 dark:hover:border-purple-700/50 shadow-2xs"
-                                }`}
+                                className={`flex items-center justify-between p-3 rounded-xl border transition-all duration-200 ${isDone
+                                    ? "bg-gray-50/70 dark:bg-slate-800/40 border-gray-100 dark:border-slate-800 text-gray-400 dark:text-slate-500"
+                                    : "bg-white dark:bg-slate-800/80 border-gray-100 dark:border-slate-700 text-gray-800 dark:text-slate-200 hover:border-purple-200 dark:hover:border-purple-700/50 shadow-2xs"
+                                    }`}
                             >
                                 <div className="flex items-center gap-3 flex-1 min-w-0 pr-2">
                                     <button
                                         onClick={() => handleToggle(todo.id)}
-                                        disabled={isLoading}
-                                        className="text-gray-400 hover:text-indigo-600 dark:hover:text-purple-400 transition-colors shrink-0 focus:outline-none"
+                                        disabled={isLoading || isDone}
+                                        className={`text-gray-400 hover:text-indigo-600 dark:hover:text-purple-400 transition-colors shrink-0 focus:outline-none ${isDone ? 'cursor-not-allowed' : ''}`}
                                     >
                                         {isDone ? (
                                             <CheckCircle2 className="w-5 h-5 text-emerald-500 fill-emerald-500/10" />
@@ -134,9 +152,8 @@ export const TodayTodosCard: React.FC<TodayTodosCardProps> = ({
 
                                     <div className="flex-1 min-w-0">
                                         <p
-                                            className={`text-xs font-medium truncate ${
-                                                isDone ? "line-through text-gray-400 dark:text-slate-500" : "text-gray-800 dark:text-slate-200"
-                                            }`}
+                                            className={`text-xs font-medium truncate ${isDone ? "line-through text-gray-400 dark:text-slate-500" : "text-gray-800 dark:text-slate-200"
+                                                }`}
                                         >
                                             {todo.title}
                                         </p>
@@ -166,6 +183,15 @@ export const TodayTodosCard: React.FC<TodayTodosCardProps> = ({
                     })}
                 </div>
             )}
+            {isToggleClicked && toggleId &&
+                <DialogDemo
+                    loadingId={loadingId}
+                    toggleId={toggleId}
+                    isToggleClicked={isToggleClicked}
+                    handleOkToggle={handleOkToggle}
+                    handleCloseToggle={handleCloseToggle}
+                />
+            }
         </div>
     );
 };

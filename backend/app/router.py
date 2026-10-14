@@ -1,3 +1,4 @@
+from app.routers.debug import debug_router
 from app.routers.push import push_router
 from app.routers.analytics import analytics_router
 from app.routers.dashboard import dashboard_router
@@ -16,3 +17,4 @@ master_router.include_router(pet_router)
 master_router.include_router(dashboard_router)
 master_router.include_router(analytics_router)
 master_router.include_router(push_router)
+master_router.include_router(debug_router)

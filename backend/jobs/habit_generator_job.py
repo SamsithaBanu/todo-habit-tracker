@@ -16,13 +16,16 @@ async def _get_all_active_users(session: AsyncSession) -> list[USERSS]:
     result = await session.execute(select(USERSS).where(USERSS.is_verified == True))  # noqa: E712
     return result.scalars().all()
 
-async def run_habit_generator(session: AsyncSession) -> None:
+async def run_habit_generator(session: AsyncSession, force: bool = False) -> None:
     """
     Runs every minute (via APScheduler). For each user whose local time is
     exactly 00:00, generates today's todos from their active habit templates.
     Idempotent: skips habits that already have a todo for that date, and the
     DB's UniqueConstraint on (user_id, habit_template_id, todo_date) is the
     final safety net if this check is ever bypassed.
+
+    force=True skips the midnight time-check entirely — used only by the
+    debug/test endpoint to run on demand, regardless of actual time.
     """
     habit_service = HabitService(session)
     todo_service = TodoService(session)
@@ -30,7 +33,7 @@ async def run_habit_generator(session: AsyncSession) -> None:
     users = await _get_all_active_users(session)
 
     for user in users:
-        if not is_local_time(user.timezone, "00:00"):
+        if not force and not is_local_time(user.timezone, "11:50"):
             continue
 
         today = get_user_local_date(user.timezone)

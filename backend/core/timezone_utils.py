@@ -7,6 +7,7 @@ from datetime import datetime, timezone as dt_timezone
 def is_local_time(user_timezone:str, target:str) ->bool:
     """target format: 'HH:MM', eg. '00:00' """
     now_local = datetime.now(ZoneInfo(user_timezone))
+    print(f'local {now_local}')
     return now_local.strftime("%H:%M") == target
 
 def get_user_local_date(user_timezone: str) -> date:

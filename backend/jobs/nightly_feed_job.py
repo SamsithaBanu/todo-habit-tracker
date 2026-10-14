@@ -21,14 +21,16 @@ FEED_RULES = [
     {"min": 0,   "feed": "none",    "delta": -25},
 ]
 
-async def _already_summarized(session: AsyncSession, user_id: UUID, summary_date) ->bool:
+async def _already_summarized(session: AsyncSession, user_id: UUID, summary_date) -> bool:
     result = await session.execute(
         select(DAILY_SUMMARIES).where(
-            DAILY_SUMMARIES.user_id == user_id, 
-            DAILY_SUMMARIES.summary_date == summary_date
+            DAILY_SUMMARIES.user_id == user_id,
+            DAILY_SUMMARIES.summary_date == summary_date,
         )
     )
-    return result.scalar_one_or_none is not None
+    existing = result.scalar_one_or_none()
+    print(f"result: {existing}")
+    return existing is not None
 
 async def _count_todos(session: AsyncSession, user_id: UUID, todo_date) ->tuple[int, int]:
     result = await session.execute(
@@ -57,18 +59,21 @@ async def run_nightly_feed(session: AsyncSession) -> None:
     pet_service = PetService(session)
 
     for user in users:
-        if not is_local_time(user.timezone, "00:00"):
+        if not is_local_time(user.timezone, "11:50"):
             continue
 
         today = get_user_local_date(user.timezone)
         yesterday = today - timedelta(days=1)
-
+        print(f'yesterday {yesterday}, {await _already_summarized(session, user.id, yesterday)}')
         if await _already_summarized(session, user.id, yesterday):
             continue
+
 
         total, completed = await _count_todos(session, user.id, yesterday)
         pct = (completed / total * 100) if total else 0.0
         rule = _match_rule(pct)
+
+        print(f"rule {rule}")
 
         summary = DAILY_SUMMARIES(
             user_id=user.id,
@@ -79,6 +84,7 @@ async def run_nightly_feed(session: AsyncSession) -> None:
             feed_level=rule["feed"],
             health_delta=rule["delta"],
         )
+        print(f"summary {summary}")
         session.add(summary)
         await session.commit()   # commit summary first — this alone guards idempotency
 

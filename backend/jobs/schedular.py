@@ -27,7 +27,7 @@ def start_scheduler():
     scheduler.add_job(
         _run_habit_generator_wrapper,
         trigger='cron',
-        minute="*/5",
+        minute="*",
         id="habit_generator",
         replace_existing=True
     ),
