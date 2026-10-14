@@ -16,7 +16,7 @@ class USERSS(SQLModel, table=True):
     email: EmailStr = Field(sa_column=Column(String(255), unique=True, nullable=False))
     created_at: datetime | None = Field(sa_column=Column(DateTime(timezone=True), server_default=func.now(), nullable=False))
     updated_at: datetime | None = Field(sa_column=Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False))
-    timezone: str = Field(default="UTC", sa_column=Column(Text, nullable=False))
+    timezone: str = Field(default="Asia/Kolkata", sa_column=Column(Text, nullable=False))
     is_verified: bool = Field(default=False, sa_column=Column(Boolean, default=False, nullable=False))
     reminder_morning_time: time = Field(default=time(8, 0), sa_column=Column(Time, nullable=False))
     reminder_evening_time: time = Field(default=time(21, 0), sa_column=Column(Time, nullable=False))
