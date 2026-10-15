@@ -59,7 +59,7 @@ async def run_nightly_feed(session: AsyncSession) -> None:
     pet_service = PetService(session)
 
     for user in users:
-        if not is_local_time(user.timezone, "00:00"):
+        if not is_local_time(user.timezone, "10:17"):
             continue
 
         today = get_user_local_date(user.timezone)

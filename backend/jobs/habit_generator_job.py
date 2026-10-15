@@ -33,7 +33,7 @@ async def run_habit_generator(session: AsyncSession, force: bool = False) -> Non
     users = await _get_all_active_users(session)
 
     for user in users:
-        if not force and not is_local_time(user.timezone, "00:00"):
+        if not force and not is_local_time(user.timezone, "10:17"):
             continue
 
         today = get_user_local_date(user.timezone)
