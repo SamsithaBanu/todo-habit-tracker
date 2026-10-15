@@ -13,6 +13,7 @@ import {
 } from "@/services/TodoService";
 import type { Todo } from "@/lib/types";
 import { Link } from "react-router-dom";
+import { DialogDemo } from "@/components/DialogComponent";
 
 const formatDateLabel = (d: Date): string => {
     const today = new Date();
@@ -38,6 +39,7 @@ const toDateString = (d: Date): string => {
     return `${yyyy}-${mm}-${dd}`;
 };
 
+
 const TodosPage = () => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [todos, setTodos] = useState<Todo[]>([]);
@@ -49,7 +51,13 @@ const TodosPage = () => {
     const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
 
+    // Dialog state
+    const [isToggleClicked, setIsToggleClicked] = useState(false);
+    const [pendingToggleTodo, setPendingToggleTodo] = useState<Todo | null>(null);
+
     const dateStr = toDateString(currentDate);
+    const isToday = toDateString(currentDate) === toDateString(new Date());
+    const isPast = toDateString(currentDate) < toDateString(new Date());
     const completedCount = todos.filter((t) => t.status === "completed").length;
     const pct = todos.length > 0 ? Math.round((completedCount / todos.length) * 100) : 0;
 
@@ -86,17 +94,33 @@ const TodosPage = () => {
         }
     };
 
-    const handleToggle = async (todo: Todo) => {
-        if (todo.status === "completed") return;
-        setActionLoadingId(todo.id);
+    // Opens the confirmation dialog (only for today's tasks)
+    const handleToggle = (todo: Todo) => {
+        if (todo.status === "completed" || !isToday) return;
+        setPendingToggleTodo(todo);
+        setIsToggleClicked(true);
+    };
+
+    // Called when user clicks "Complete Task" in the dialog
+    const handleConfirmToggle = async () => {
+        if (!pendingToggleTodo) return;
+        setActionLoadingId(pendingToggleTodo.id);
         try {
-            const updated = await markTodoComplete(todo.id);
-            setTodos((prev) => prev.map((t) => (t.id === todo.id ? updated : t)));
+            const updated = await markTodoComplete(pendingToggleTodo.id);
+            setTodos((prev) => prev.map((t) => (t.id === pendingToggleTodo.id ? updated : t)));
+            toast.success("Task completed! 🎉");
         } catch {
             toast.error("Failed to update task.");
         } finally {
             setActionLoadingId(null);
+            setIsToggleClicked(false);
+            setPendingToggleTodo(null);
         }
+    };
+
+    const handleCloseToggle = () => {
+        setIsToggleClicked(false);
+        setPendingToggleTodo(null);
     };
 
     const handleDelete = async (todoId: string) => {
@@ -147,10 +171,17 @@ const TodosPage = () => {
         setCurrentDate(d);
     };
 
-    const isToday = toDateString(currentDate) === toDateString(new Date());
-
     return (
         <div className="space-y-4 pb-6">
+            {/* Confirmation Dialog */}
+            <DialogDemo
+                handleOkToggle={handleConfirmToggle}
+                handleCloseToggle={handleCloseToggle}
+                isToggleClicked={isToggleClicked}
+                toggleId={pendingToggleTodo?.id ?? null}
+                loadingId={actionLoadingId}
+            />
+
             {/* Header */}
             <div>
                 <h2 className="text-xl font-extrabold text-gray-900 dark:text-white tracking-tight">My Tasks</h2>
@@ -217,31 +248,33 @@ const TodosPage = () => {
             <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
                 {/* Card Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-slate-800">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                         <div className="p-1.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 rounded-lg">
                             <ClipboardList className="w-4 h-4" />
                         </div>
                         <span className="font-semibold text-gray-800 dark:text-slate-200 text-sm">Task List</span>
                     </div>
-                    <button
-                        onClick={() => { setShowAddForm((v) => !v); setEditingId(null); }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition-all ${showAddForm
-                            ? "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300"
-                            : "bg-indigo-600 dark:bg-purple-600 hover:bg-indigo-700 dark:hover:bg-purple-500 text-white"
-                            }`}
-                    >
-                        <Plus className="w-3.5 h-3.5" />
-                        {showAddForm ? "Cancel" : "Add Task"}
-                    </button>
-                    <div className="flex items-center gap-2">
-                        <Link
-                            to="/habits"
-                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60 transition-all"
-                        >
-                            <Repeat className="w-3.5 h-3.5" />
-                            Manage habits
-                        </Link>
-                    </div>
+                    {!isPast && (
+                        <div className="flex items-center gap-2 shrink-0">
+                            <button
+                                onClick={() => { setShowAddForm((v) => !v); setEditingId(null); }}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition-all ${showAddForm
+                                    ? "bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300"
+                                    : "bg-indigo-600 dark:bg-purple-600 hover:bg-indigo-700 dark:hover:bg-purple-500 text-white"
+                                    }`}
+                            >
+                                <Plus className="w-3.5 h-3.5" />
+                                {showAddForm ? "Cancel" : "Add Task"}
+                            </button>
+                            <Link
+                                to="/habits"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 hover:bg-purple-100 dark:hover:bg-purple-900/60 transition-all"
+                            >
+                                <Repeat className="w-3.5 h-3.5" />
+                                Manage habits
+                            </Link>
+                        </div>
+                    )}
                 </div>
 
                 {/* Add Form */}
@@ -269,13 +302,24 @@ const TodosPage = () => {
                     </form>
                 )}
                 {showAddForm && (
-                    <p className="px-4 pb-3 text-[11px] text-gray-400 dark:text-slate-500 -mt-1">
+                    <p className="px-4 mt-3 pb-3 text-[11px] text-gray-400 dark:text-slate-500 -mt-1">
                         Repeating this daily or weekly?{" "}
                         <Link to="/habits" className="text-indigo-600 dark:text-purple-400 font-semibold hover:underline">
                             Create a habit instead
                         </Link>
                     </p>
                 )}
+
+                {/* Non-today info banner */}
+                {!isToday && todos.length > 0 && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/20 border-b border-amber-100 dark:border-amber-900/30">
+                        <CalendarDays className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                        <p className="text-[11px] text-amber-700 dark:text-amber-400 font-medium">
+                            Viewing {formatDateLabel(currentDate)} — task completion is only available for today.
+                        </p>
+                    </div>
+                )}
+
                 {/* Loading */}
                 {loading ? (
                     <div className="flex items-center justify-center py-12 text-gray-400 dark:text-slate-500">
@@ -286,7 +330,9 @@ const TodosPage = () => {
                     <div className="text-center py-12">
                         <CheckSquare className="w-10 h-10 text-gray-200 dark:text-slate-700 mx-auto mb-2" />
                         <p className="text-sm font-semibold text-gray-400 dark:text-slate-500">No tasks for this day</p>
-                        <p className="text-xs text-gray-300 dark:text-slate-600 mt-1">Click "Add Task" to create one</p>
+                        {!isPast && (
+                            <p className="text-xs text-gray-300 dark:text-slate-600 mt-1">Click "Add Task" to create one</p>
+                        )}
                     </div>
                 ) : (
                     <div className="divide-y divide-gray-50 dark:divide-slate-800/80">
@@ -295,6 +341,8 @@ const TodosPage = () => {
                             const isActionLoading = actionLoadingId === todo.id;
                             const isEditing = editingId === todo.id;
                             const isHabit = !!todo.habit_template_id;
+                            // Toggle is only clickable for today's pending tasks
+                            const canToggle = isToday && !isDone;
 
                             return (
                                 <div
@@ -304,20 +352,33 @@ const TodosPage = () => {
                                         : "hover:bg-gray-50/50 dark:hover:bg-slate-800/30"
                                         }`}
                                 >
-                                    {/* Toggle */}
-                                    <button
-                                        onClick={() => handleToggle(todo)}
-                                        disabled={isActionLoading || isDone}
-                                        className="shrink-0 transition-transform active:scale-90"
+                                    {/* Toggle button */}
+                                    <div
+                                        role="button"
+                                        title={
+                                            isDone
+                                                ? "Already completed"
+                                                : !isToday
+                                                    ? "Can only complete today's tasks"
+                                                    : "Mark as complete"
+                                        }
+                                        className={`shrink-0 transition-transform ${canToggle && !isActionLoading
+                                            ? "cursor-pointer active:scale-90"
+                                            : "cursor-not-allowed opacity-40"
+                                            }`}
+                                        onClick={() => canToggle && !isActionLoading && handleToggle(todo)}
                                     >
                                         {isActionLoading && !isEditing ? (
                                             <Loader2 className="w-5 h-5 text-indigo-400 animate-spin" />
                                         ) : isDone ? (
                                             <CheckCircle2 className="w-5 h-5 text-emerald-500 fill-emerald-50 dark:fill-emerald-900/20" />
                                         ) : (
-                                            <Circle className="w-5 h-5 text-gray-300 dark:text-slate-600 hover:text-indigo-500 dark:hover:text-purple-400 transition-colors" />
+                                            <Circle className={`w-5 h-5 ${canToggle
+                                                ? "text-gray-300 dark:text-slate-600 hover:text-indigo-500 dark:hover:text-purple-400 transition-colors"
+                                                : "text-gray-200 dark:text-slate-700"
+                                                }`} />
                                         )}
-                                    </button>
+                                    </div>
 
                                     {/* Title / Edit */}
                                     <div className="flex-1 min-w-0">
@@ -370,8 +431,8 @@ const TodosPage = () => {
                                                     <Repeat className="w-3.5 h-3.5" />
                                                 </span>
                                             )}
-                                            {/* Edit button — only for non-habit, non-completed */}
-                                            {!isHabit && !isDone && (
+                                            {/* Edit — only for non-habit, non-completed */}
+                                            {!isHabit && !isDone && !isPast && (
                                                 <button
                                                     onClick={() => startEdit(todo)}
                                                     className="p-1.5 text-gray-300 dark:text-slate-600 hover:text-indigo-500 dark:hover:text-purple-400 opacity-0 group-hover:opacity-100 transition-all rounded-lg"
@@ -380,8 +441,8 @@ const TodosPage = () => {
                                                     <Pencil className="w-3.5 h-3.5" />
                                                 </button>
                                             )}
-                                            {/* Delete button — only for non-habit */}
-                                            {!isHabit && (
+                                            {/* Delete — only for non-habit */}
+                                            {!isHabit && !isPast && (
                                                 <button
                                                     onClick={() => handleDelete(todo.id)}
                                                     disabled={isActionLoading}

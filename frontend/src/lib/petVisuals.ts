@@ -11,12 +11,12 @@
 // Any file you haven't added yet is skipped automatically — the emoji fallback
 // in PetDetailsPage.tsx covers it until you do.
 
-export type HealthTier = "thriving" | "happy" | "weak" | "fainted";
+export type HealthTier = "sad" | "happy" | "weak" | "fainted";
 
 export function getHealthTier(health: number, isDead: boolean): HealthTier {
     if (isDead || health <= 0) return "fainted";
-    if (health > 80) return "thriving";
-    if (health > 40) return "happy";
+    if (health > 80) return "happy";
+    if (health > 40) return "sad";
     return "weak";
 }
 
@@ -36,8 +36,8 @@ export function getPetVideoSrc(species: string, tier: HealthTier): string | null
 
 export function getHealthTierLabel(tier: HealthTier): string {
     switch (tier) {
-        case "thriving":
-            return "Thriving and super happy";
+        case "sad":
+            return "Dog is sad and not happy";
         case "happy":
             return "Doing well";
         case "weak":
